@@ -5,9 +5,7 @@
 using namespace std;
 
 int main() {
-	vector<string> test(3, "hello");
-	/*for (auto i = test.begin(); i < test.end(); i++)
-		cout << *i << endl;*/
+	InputRansac<string> test("3 4");
 	Ransac<string> ransac(test);
 	cout << ransac << endl;
 	int t;
