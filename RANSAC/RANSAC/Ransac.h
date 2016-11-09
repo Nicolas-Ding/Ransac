@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -7,11 +8,11 @@ template <class T>
 class Ransac
 {
 private:
-	T data;
+	vector<T> data;
 
 public:
-	Ransac(T points);
-	T getData() const;
+	Ransac(vector<T> points);
+	vector<T> getData() const;
 	template <class T> friend ostream& operator<<(ostream &flux, const Ransac r);
 };
 

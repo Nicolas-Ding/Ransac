@@ -3,13 +3,13 @@
 /* DEFINITION DES FONCTIONS */
 
 template<class T>
-Ransac<T>::Ransac(T points)
+Ransac<T>::Ransac(vector<T> points)
 {
 	data = points;
 }
 
 template<class T>
-T Ransac<T>::getData() const
+vector<T> Ransac<T>::getData() const
 {
 	return data;
 }
@@ -17,7 +17,9 @@ T Ransac<T>::getData() const
 template<class T>
 ostream & operator<<(ostream & flux, const Ransac<T> r)
 {
-	flux << r.getData();
+	vector<T> test = r.getData();
+	for (auto i = test.begin(); i < test.end(); i++)
+		flux << *i << " ";
 	return flux;
 }
 
