@@ -4,6 +4,6 @@
 using namespace std;
 
 int main() {
-	Ransac ransac = Ransac();
+	Ransac<string> ransac = Ransac<string>("Hello world");
 	cout << ransac << endl;
 }

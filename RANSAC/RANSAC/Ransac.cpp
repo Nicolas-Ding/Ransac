@@ -1,18 +1,20 @@
 #include "Ransac.h"
 
 
-
-Ransac::Ransac()
+template<class T>
+Ransac<T>::Ransac(T points)
 {
+	self.points = points;
 }
 
-ostream & operator<<(ostream & flux, const Ransac r)
+template<class T>
+ostream & operator<<(ostream & flux, const Ransac<T> r)
 {
-	flux << "Printing Ransac";
+	flux << r.points;
 	return flux;
 }
 
-
-Ransac::~Ransac()
+template<class T>
+Ransac<T>::~Ransac()
 {
 }
