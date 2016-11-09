@@ -7,11 +7,11 @@ template <class T>
 class Ransac
 {
 private:
-	T points;
+	T data;
 
 public:
 	Ransac(T points);
-	friend ostream& operator<<(ostream &flux, const Ransac r);
-	virtual ~Ransac();
+	T getData() const;
+	template <class T> friend ostream& operator<<(ostream &flux, const Ransac r);
 };
 

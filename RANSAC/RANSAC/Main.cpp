@@ -1,9 +1,11 @@
 #include <iostream>
-#include "Ransac.h"
+#include "Ransac.cpp"
 
 using namespace std;
 
 int main() {
-	Ransac<string> ransac = Ransac<string>("Hello world");
+	Ransac<int> ransac(3);
 	cout << ransac << endl;
+	int t;
+	cin >> t;
 }
