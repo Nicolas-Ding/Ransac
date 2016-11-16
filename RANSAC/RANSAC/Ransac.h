@@ -15,10 +15,29 @@ private:
 	InputRansac<T> input;
 
 public:
-	Ransac(InputRansac<T> points);
-	InputRansac<T> getInput() const;
-	InputRansac<T> getSubSample(int n) const;
-	template <class T> friend ostream& operator<<(ostream &flux, const Ransac r);
+	Ransac(InputRansac<T> points)
+	{
+		input = points;
+	}
+	
+	InputRansac<T> getInput() const
+	{
+		return input;
+	}
+
+	
+	InputRansac<T> getSubSample(int k) const
+	{
+		return input.getSubSample(k);
+	}
+
+
+	friend ostream & operator<<(ostream & flux, const Ransac<T> r)
+	{
+		T test = r.getInput();
+		flux << T << endl;
+		return flux;
+	}
 };
 
 #endif

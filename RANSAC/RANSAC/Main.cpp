@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include "InputRansac.cpp"
+#include "InputRansac.h"
 #include "Ransac.h"
 
 using namespace std;

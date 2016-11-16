@@ -13,9 +13,25 @@ private:
 	vector<T> points;
 
 public:
-	InputRansac(vector<T> inputs);
-	vector<T> getPoints() const;
-	template <T> friend ostream& operator<<(ostream &flux, const InputRansac i);
+	
+	InputRansac(vector<T> inputs)
+	{
+		points = inputs;
+	}
+
+	
+	vector<T> getPoints() const
+	{
+		return points;
+	}
+
+	
+	friend ostream & operator<<(ostream & flux, const InputRansac<T> i)
+	{
+		for (auto i = points.begin(); i < points.end(); i++)
+			flux << *i << " ";
+		return flux;
+	}
 };
 
 #endif
