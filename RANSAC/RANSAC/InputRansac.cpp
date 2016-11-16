@@ -1,23 +1,22 @@
 #include "InputRansac.h"
-
 /* DEFINITION DES FONCTIONS */
 
 template<class T>
-InputRansac<T>::InputRansac(T pointInput)
+InputRansac<T>::InputRansac(vector<T> inputs)
 {
-	point = pointInput;
+	points = inputs;
 }
 
 template<class T>
-T InputRansac<T>::getPoint() const
+vector<T> InputRansac<T>::getPoints() const
 {
-	return point;
+	return points;
 }
 
 template<class T>
 ostream & operator<<(ostream & flux, const InputRansac<T> i)
 {
-	T test = r.getPoint();
-	flux << test << " ";
+	for (auto i = points.begin(); i < points.end(); i++)
+		flux << *i << " ";
 	return flux;
 }

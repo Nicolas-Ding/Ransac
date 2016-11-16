@@ -1,25 +1,29 @@
 #include "Ransac.h"
-
 /* DEFINITION DES FONCTIONS */
 
 template<class T>
-Ransac<T>::Ransac(vector<T> points)
+Ransac<T>::Ransac(InputRansac<T> points)
 {
-	data = points;
+	input = points;
 }
 
 template<class T>
-vector<T> Ransac<T>::getData() const
+InputRansac<T> Ransac<T>::getInput() const
 {
-	return data;
+	return input;
+}
+
+template<class T>
+InputRansac<T> Ransac<T>::getSubSample(int k) const
+{
+	return input.getSubSample(k);
 }
 
 template<class T>
 ostream & operator<<(ostream & flux, const Ransac<T> r)
 {
-	vector<T> test = r.getData();
-	for (auto i = test.begin(); i < test.end(); i++)
-		flux << *i << " ";
+	T test = r.getInput();
+	flux << T << endl;
 	return flux;
 }
 

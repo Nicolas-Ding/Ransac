@@ -1,5 +1,9 @@
+#ifndef HEADER_RANSAC
+#define HEADER_RANSAC
+
 #include <iostream>
 #include <vector>
+#include "InputRansac.h"
 
 using namespace std;
 
@@ -8,11 +12,13 @@ template <class T>
 class Ransac
 {
 private:
-	vector<T> data;
+	InputRansac<T> input;
 
 public:
-	Ransac(vector<T> points);
-	vector<T> getData() const;
+	Ransac(InputRansac<T> points);
+	InputRansac<T> getInput() const;
+	InputRansac<T> getSubSample(int n) const;
 	template <class T> friend ostream& operator<<(ostream &flux, const Ransac r);
 };
 
+#endif
