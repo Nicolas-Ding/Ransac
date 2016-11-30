@@ -16,7 +16,6 @@ private:
 public:
 	Ransac(Model<T>* points)
 	{
-		points->printClass();
 		input = points;
 	}
 	
@@ -27,7 +26,6 @@ public:
 
 	void compute(int iterationNb, int subSampleSize, double allowedError)
 	{
-		input->printClass();
 		int bestCorr = -1;
 		Model<T>* bestModel = NULL;
 		for (int i = 0; i < iterationNb; i++) {
@@ -40,7 +38,6 @@ public:
 			}
 		}
 		bestModel->printClass();
-		cout << *bestModel << endl;
 	}
 
 

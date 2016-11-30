@@ -28,23 +28,8 @@ public:
 		return points;
 	}
 
-	Model<T>* getSubSample(int k) const
-	{
-		set<int> indexes;
-		vector<T> choices;
-		int max_index = points.size();
-		while (indexes.size() < min(k, max_index))
-		{
-			int random_index = rand() % max_index;
-			if (indexes.find(random_index) == indexes.end())
-			{
-				choices.push_back(points[random_index]);
-				indexes.insert(random_index);
-			}
-		}
-		return new Model<T>(choices);
-	}
-
+	virtual Model<T>* getSubSample(int k) const { return NULL; };
+	virtual void printClass() { cout << "Model" << endl; };
 	virtual void computeParameters() {} ;
 	virtual bool isOutlier(T testInput, double err) const { return false; };
 
@@ -63,9 +48,7 @@ public:
 		return flux;
 	}
 
-	void printClass() {
-		cout << "Model" << endl;
-	}
+
 };
 
 #endif
