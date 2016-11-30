@@ -16,6 +16,12 @@ public:
 	int getY() { return y; }
 	int setX(int x0) { x = x0; }
 	int setY(int y0) { y = y0; }
-	~Point2D();
+
+	friend ostream & operator<<(ostream & flux, const Point2D pt)
+	{
+		flux << "[" << pt.x << ";" << pt.y << "]";
+		return flux;
+	}
+	~Point2D() {} ;
 };
 

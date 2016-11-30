@@ -28,7 +28,7 @@ public:
 		return points;
 	}
 
-	Model<T> getSubSample(int k) const
+	Model<T>* getSubSample(int k) const
 	{
 		set<int> indexes;
 		vector<T> choices;
@@ -42,7 +42,17 @@ public:
 				indexes.insert(random_index);
 			}
 		}
-		return Model<T>(choices);
+		return new Model<T>(choices);
+	}
+
+	virtual void computeParameters() {} ;
+	virtual bool isOutlier(T testInput, double err) const { return false; };
+
+	int testCorrelation(Model<T> testingModel, double allowedError) {
+		int res = 0;
+		for (auto i = points.begin(); i < points.end(); i++)
+			res += (testingModel.isOutlier(*i, allowedError) ? 0 : 1);
+		return res;
 	}
 	
 	friend ostream & operator<<(ostream & flux, const Model<T> r)
@@ -51,6 +61,10 @@ public:
 		for (auto i = vec.begin(); i < vec.end(); i++)
 			flux << *i << " ";
 		return flux;
+	}
+
+	void printClass() {
+		cout << "Model" << endl;
 	}
 };
 
