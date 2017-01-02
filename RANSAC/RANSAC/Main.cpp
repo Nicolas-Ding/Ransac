@@ -1,23 +1,34 @@
+#pragma once
+
 #include <iostream>
 #include <string>
 #include <time.h>
-#include "Model.h"
+#include <stdlib.h>
+#include <vector>
+
 #include "Ransac.h"
 #include "Point2D.h"
+#include "Point2DData.h"
 #include "Point2DModel.h"
+
+#include "HomographyData.h"
 
 using namespace std;
 
+const int iterationNb = 100;
+const int subSampleSize = 5;
+const int allowedError = 150;
+
 int main() {
 	srand(time(NULL));
-	vector<Point2D> input;
-	for (int i = 0; i < 10; i++) {
-		input.push_back(Point2D(i,i));
-	}
-
-	Point2DModel* test = new Point2DModel(input);
-	Ransac<Point2D> ransac(test);
-	ransac.compute(10, 30, 2);
-	int t;
+	
+	/*Ransac<Point2DData, Point2DModel> ransac(new Point2DData()); 
+	ransac.compute(100, 5, 0);*/
+	/*HomographyData test = HomographyData(); 
+	HomographyModel mod = test.computeModel(subSampleSize);
+	test.show(mod);*/
+	Ransac<HomographyData, HomographyModel> ransac(new HomographyData);
+	ransac.compute(iterationNb, subSampleSize, allowedError);
+	int t; 
 	cin >> t;
 }

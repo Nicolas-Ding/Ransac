@@ -1,51 +1,61 @@
-#ifndef HEADER_RANSAC
-#define HEADER_RANSAC
+#pragma once
 
-#include <iostream>
+#include <iostream> 
 #include <vector>
-#include "Model.h"
+#include <set>
+#include "RansacUtils.h"
+
 
 using namespace std;
 
-template <class T>
+template <class DataClass, class ModelClass>
 class Ransac
 {
 private:
-	Model<T>* input;
+	DataClass* data;
 
 public:
-	Ransac(Model<T>* points)
+	Ransac(DataClass* m)
 	{
-		input = points;
+		data = m;
 	}
-	
-	Model<T> getInput() const
+
+	DataClass* getData() const
 	{
-		return *input;
+		return data;
 	}
 
 	void compute(int iterationNb, int subSampleSize, double allowedError)
 	{
-		int bestCorr = -1;
-		Model<T>* bestModel = NULL;
+		int bestCorr = NULL;
+		ModelClass* bestModel = NULL;
 		for (int i = 0; i < iterationNb; i++) {
-			Model<T>* subSample = input->getSubSample(subSampleSize);
-			subSample->computeParameters();
-			int corr = input->testCorrelation(*subSample, allowedError);
-			if (corr > bestCorr) {
+			ModelClass* model = data->computeModel(subSampleSize);
+			int corr = testCorrelation(model, data, allowedError);
+			cout << "Corr --> " << corr << endl;
+			if (bestCorr == NULL || corr > bestCorr) {
 				bestCorr = corr;
-				bestModel = subSample;
+				bestModel = model;
 			}
 		}
 		bestModel->printClass();
+		cout << "correlation is " << bestCorr << endl;
+		data->show(*bestModel);
+	}
+
+	int testCorrelation(ModelClass* testingModel, DataClass* testingData, double allowedError) {
+		int res = 0;
+		/*for (auto i = testingData->begin(); i < testingData->end(); i++)
+			res += (testingModel->isOutlier(*i, allowedError) ? 0 : 1);*/
+		res = testingModel->countInliers(testingData->getInOutliersData(), allowedError);
+		return res;
 	}
 
 
-	friend ostream & operator<<(ostream & flux, const Ransac<T> r)
+	friend ostream & operator<<(ostream & flux, const Ransac<DataClass,ModelClass> r)
 	{
 		flux << r.getInput() << endl;
 		return flux;
 	}
 };
 
-#endif
