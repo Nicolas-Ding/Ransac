@@ -61,23 +61,6 @@ public:
 		waitKey();
 	}
 
-	vector<Point2D> getSubSample(int k) const
-	{
-		set<int> indexes;
-		vector<Point2D> choices;
-		int max_index = points.size();
-		while (indexes.size() < min(k, max_index))
-		{
-			int random_index = rand() % max_index;
-			if (indexes.find(random_index) == indexes.end())
-			{
-				choices.push_back(points[random_index]);
-				indexes.insert(random_index);
-			}
-		}
-		return choices;
-	}
-
 	Point2DModel* computeModel(int k) {
 		vector<Point2D> subSample = RansacUtils::getSubVector<Point2D> (points,k);
 		double sumX = 0;

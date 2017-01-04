@@ -15,6 +15,9 @@ private:
 	DataClass* data;
 
 public:
+
+	Ransac() {};
+
 	Ransac(DataClass* m)
 	{
 		data = m;
@@ -25,22 +28,35 @@ public:
 		return data;
 	}
 
-	void compute(int iterationNb, int subSampleSize, double allowedError)
+	void setData(DataClass* m)
+	{
+		data = m;
+	}
+
+	ModelClass compute(int iterationNb, int subSampleSize, double allowedError, int corrBreakPoint)
 	{
 		int bestCorr = NULL;
 		ModelClass* bestModel = NULL;
 		for (int i = 0; i < iterationNb; i++) {
 			ModelClass* model = data->computeModel(subSampleSize);
-			int corr = testCorrelation(model, data, allowedError);
-			cout << "Corr --> " << corr << endl;
-			if (bestCorr == NULL || corr > bestCorr) {
-				bestCorr = corr;
-				bestModel = model;
+			if (model != NULL)
+			{
+				int corr = testCorrelation(model, data, allowedError);
+				cout << "Corr --> " << corr << endl;
+				if (bestCorr == NULL || corr > bestCorr) {
+					bestCorr = corr;
+					bestModel = model;
+					if (bestCorr > corrBreakPoint)
+						i = iterationNb;
+				}
 			}
+			if (i % 20 == 0)
+				corrBreakPoint -= 10;
 		}
 		bestModel->printClass();
 		cout << "correlation is " << bestCorr << endl;
 		data->show(*bestModel);
+		return *bestModel;
 	}
 
 	int testCorrelation(ModelClass* testingModel, DataClass* testingData, double allowedError) {

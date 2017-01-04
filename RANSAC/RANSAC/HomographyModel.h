@@ -43,21 +43,7 @@ public :
 	};
 	int getPanoW() { return pano_w; };
 	int getPanoH() { return pano_h; };
-	bool isInlier(KeyPoint pt, double allowedErr) const {
-		vector<Point2f> key;
-		vector<Point2f> res(1);
-		key.push_back(pt.pt);
-		perspectiveTransform(key, res, H);
-		res.at(0).x = (int) floor(res.at(0).x);
-		res.at(0).y = (int) floor(res.at(0).y);
-		if (res.at(0).x < 0 || res.at(0).x >= destImage.cols || res.at(0).y < 0 || res.at(0).y >= destImage.rows)
-			return false;
-		else {
-			return (abs(srcImage.at<uchar>(key.at(0)) - destImage.at<uchar>(res.at(0))) <= allowedErr);
-		}
-		
-	}
-
+	
 	int countInliers(vector<KeyPoint> keyPoints, int allowedError) {
 		int res = 0;
 		vector<Point2f> points;
@@ -70,21 +56,23 @@ public :
 			tranformedKeyPoints.push_back(KeyPoint(*i, 1));
 		Ptr<SiftDescriptorExtractor> extractor = SiftDescriptorExtractor::create();
 		Mat descriptors1, descriptors2;
-		extractor->compute(srcImage, keyPoints, descriptors1); //should be able to optimise and use the right rows of srcDescriptors
 		extractor->compute(destImage, tranformedKeyPoints, descriptors2);
 		BFMatcher matcher(NORM_L2);
-		vector<DMatch> matches;
-		matcher.match(descriptors1, descriptors2, matches);
+		/*vector<DMatch> matches;
+		matcher.match(descriptors1, descriptors2, matches);*/
 		double max_dist = 0; double min_dist = 10000;
-		for (int i = 0; i < descriptors1.rows; i++)
+		for (int i = 0; i < srcDescriptors.rows; i++)
 		{
-			double dist = matches[i].distance;
-			if (dist < min_dist) min_dist = dist;
-			if (dist > max_dist) max_dist = dist;
-		}
-		printf("-- min-Max dist in check : %f - %f\n", min_dist, max_dist);
-		for (int i = 0; i < descriptors1.rows; i++) {
-			res += (matches[i].distance < allowedError ? 1 : 0);
+			if (!(tranformedKeyPoints.at(i).pt.x < 0
+				|| tranformedKeyPoints.at(i).pt.x >= destImage.cols
+				|| tranformedKeyPoints.at(i).pt.y < 0
+				|| tranformedKeyPoints.at(i).pt.y >= destImage.rows))
+			{
+				double dist = norm(srcDescriptors.row(i) - descriptors2.row(i), NORM_L2);
+				if (dist < min_dist) min_dist = dist;
+				if (dist > max_dist) max_dist = dist;
+				res += (dist < allowedError ? 1 : 0);
+			}
 		}
 		return res;
 	}

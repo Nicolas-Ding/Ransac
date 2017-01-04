@@ -12,8 +12,6 @@
 using namespace cv;
 using namespace cv::xfeatures2d;
 
-const int thresh = 120;
-
 
 class HomographyData {
 	private :
@@ -27,11 +25,14 @@ class HomographyData {
 		vector< DMatch > matches;
 		vector<KeyPoint> Im1_keypoints;
 		vector<KeyPoint> Im2_keypoints;
+		int minDist = -1;
+		vector<double> dists;
+		int meanDist = -1;
 	
 	public :
 		HomographyData() {
-			Im1 = imread("Images/yosemite_a.jpg", CV_LOAD_IMAGE_COLOR);
-			Im2 = imread("Images/yosemite_b.jpg", CV_LOAD_IMAGE_COLOR);
+			Im1 = imread("Images/image0006.jpg", CV_LOAD_IMAGE_COLOR);
+			Im2 = imread("Images/image0007.jpg", CV_LOAD_IMAGE_COLOR);
 			cvtColor(Im1, Im1_gray, CV_BGR2GRAY); //harris needs gray image
 			cvtColor(Im2, Im2_gray, CV_BGR2GRAY);
 			Im1_keypoints = findHarris(Im1_gray);
@@ -40,10 +41,28 @@ class HomographyData {
 			extractor->compute(Im1_gray, Im1_keypoints, descriptors1);
 			extractor->compute(Im2_gray, Im2_keypoints, descriptors2);
 			//FlannBasedMatcher matcher;
-			BFMatcher matcher(NORM_L2);
-			matcher.match(descriptors1, descriptors2, matches);
-
+			matches = findMatches();
 		} 
+
+		HomographyData(Mat Image1, Mat Image2) {
+			Im1 = Image1;
+			Im2 = Image2;
+			if (Im1.type() != CV_8U)
+				cvtColor(Im1, Im1_gray, CV_BGR2GRAY); //harris needs gray image
+			else
+				Im1_gray = Im1;
+			if (Im2.type() != CV_8U)
+				cvtColor(Im2, Im2_gray, CV_BGR2GRAY);
+			else
+				Im2_gray = Im2;
+			Im1_keypoints = findHarris(Im1_gray);
+			Im2_keypoints = findHarris(Im2_gray);
+			Ptr<SiftDescriptorExtractor> extractor = SiftDescriptorExtractor::create();
+			extractor->compute(Im1_gray, Im1_keypoints, descriptors1);
+			extractor->compute(Im2_gray, Im2_keypoints, descriptors2);
+			//FlannBasedMatcher matcher;
+			matches = findMatches();
+		}
 
 		auto begin() {
 			return Im1_keypoints.begin();
@@ -51,6 +70,18 @@ class HomographyData {
 
 		auto end() {
 			return Im1_keypoints.end();
+		}
+
+		double getMinDist() {
+			return dists.at(0);
+		}
+
+		double getDistsAt(int i) {
+			return dists.at(i);
+		}
+
+		int getMeanDist() {
+			return meanDist;
 		}
 		
 		vector<KeyPoint> getInOutliersData() const
@@ -61,7 +92,7 @@ class HomographyData {
 		HomographyModel* computeModel(int k) {
 			// compute descriptors
 			vector<DMatch> sub_matches = RansacUtils::getSubVector(matches,k);
-
+			//vector<DMatch> sub_matches = matches;
 			//-- Quick calculation of max and min distances between keypoints
 			double max_dist = 0; double min_dist = 10000;
 			for (int i = 0; i < sub_matches.size(); i++)
@@ -70,7 +101,6 @@ class HomographyData {
 				if (dist < min_dist) min_dist = dist;
 				if (dist > max_dist) max_dist = dist;
 			}
-			printf("-- min-Max dist in sub : %f - %f\n", min_dist, max_dist);
 
 			//-- Find the Homography
 			vector<Point2f> obj;
@@ -91,7 +121,12 @@ class HomographyData {
 			cadre.push_back(Point2f(0, Im1_gray.size().height));
 			cadre.push_back(Point2f(Im1_gray.size().width, Im1_gray.size().height));
 			Mat MDest;
-			perspectiveTransform(Mat(cadre), MDest, H);
+			try {
+				perspectiveTransform(Mat(cadre), MDest, H);
+			}
+			catch (...) { 
+				return NULL;
+			}
 
 			// Compute the fra:e in image 2
 			double min_x, min_y, tam_x, tam_y;
@@ -123,35 +158,56 @@ class HomographyData {
 		}
 
 		vector<DMatch> findMatches() {
-
+			BFMatcher matcher(NORM_L2);
+			matcher.match(descriptors1, descriptors2, matches);
 			double max_dist = 0; double min_dist = 10000;
-
+			double mean_dist = 0;
 			//-- Quick calculation of max and min distances between keypoints
+
+			dists.clear();
 			for (int i = 0; i < descriptors1.rows; i++)
 			{
 				double dist = matches[i].distance;
 				if (dist < min_dist) min_dist = dist;
 				if (dist > max_dist) max_dist = dist;
+				dists.push_back(dist);
+				mean_dist += dist;
 			}
 
-			printf("-- min-Max dist : %f - %f\n", min_dist, max_dist);
+			sort(dists.begin(), dists.end());
+			printf("-- min-Max dist : %f - %f [%f] / %f\n", dists.at(0), dists.at(dists.size()-1), mean_dist / descriptors1.rows, dists.at(10));
 
-			return matches;
+			minDist = min_dist;
+			meanDist = mean_dist / descriptors1.rows;
+			//return matches;
 
 			//-- Draw only "good" matches (i.e. whose distance is less than 3*min_dist )
-
-			/*for (int i = 0; i < descriptors1.rows; i++)
+			vector<DMatch> good_matches;
+			int scale = 3;
+			while (good_matches.size() < 30)
 			{
-				if (matches[i].distance < 3 * min_dist)
+				good_matches.clear();
+				for (int i = 0; i < descriptors1.rows; i++)
 				{
-					good_matches.push_back(matches[i]);
+					if (matches[i].distance <= scale * min_dist)
+					{
+						good_matches.push_back(matches[i]);
+					}
 				}
+				scale++;
 			}
-
-			return good_matches;*/
+			cout << "points reduced from " << matches.size() << " to " << good_matches.size() << "[scale : "<< scale - 1 << "]" << endl;
+			return good_matches;
 		}
 
 		void show(HomographyModel model) {
+			// Construire panorama
+			Mat Panorama = getPanorama(model);
+			imshow("Panorama", Panorama);
+			waitKey(0);
+		}
+
+		Mat getPanorama(HomographyModel model) {
 			Mat H = model.getH();
 			Mat Htr = model.getHtr();
 			// Construir panorama
@@ -159,9 +215,7 @@ class HomographyData {
 			Panorama = Mat(Size(model.getPanoW(), model.getPanoW()), CV_32F);
 			warpPerspective(Im2_gray, Panorama, Htr, Panorama.size(), INTER_LINEAR, BORDER_CONSTANT, 0);
 			warpPerspective(Im1_gray, Panorama, (Htr*H), Panorama.size(), INTER_LINEAR, BORDER_TRANSPARENT, 0);
-			//imshow("Warped Source Image", img_transformed);
-			imshow("Panorama", Panorama);
-			waitKey(0);
+			return Panorama;
 		}
 
 		vector<KeyPoint> findHarris(Mat img, bool verbose = false)
@@ -173,6 +227,7 @@ class HomographyData {
 			int blockSize = 2;
 			int apertureSize = 5;
 			double k = 0.04;
+			int thresh = 30;
 
 			/// Detecting corners
 			cornerHarris(img, dst, blockSize, apertureSize, k, BORDER_DEFAULT);
@@ -180,19 +235,33 @@ class HomographyData {
 			/// Normalizing
 			normalize(dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat());
 			convertScaleAbs(dst_norm, dst_norm_scaled);
-
 			vector<KeyPoint> res;
-			for (int j = 0; j < dst_norm.rows; j++)
+			bool restart = true; 
+			while (restart == true)
 			{
-				for (int i = 0; i < dst_norm.cols; i++)
+				restart = false;
+				for (int j = 0; j < dst_norm.rows; j++)
 				{
-					if ((int)dst_norm.at<float>(j, i) > thresh)
+					for (int i = 0; i < dst_norm.cols; i++)
 					{
-						res.push_back(KeyPoint(i, j, 1));
+						if ((int)dst_norm.at<float>(j, i) > thresh)
+						{
+							res.push_back(KeyPoint(i, j, 1));
+							if (res.size() > 500) {
+								thresh += 10;
+								res.clear();
+								restart = true;
+								i = dst_norm.cols;
+								j = dst_norm.rows;
+							}
+						}
 					}
 				}
 			}
+			cout << "Harris Points Found : " << res.size() << " (threshhold is : " << thresh << ")" << endl;
 
+			Mat temp;
+			img.copyTo(temp);
 			/// Showing the result
 			if (verbose) {
 				/// Drawing a circle around corners
@@ -202,12 +271,12 @@ class HomographyData {
 						{
 							if ((int)dst_norm.at<float>(j, i) > thresh)
 							{
-								circle(img, Point(i, j), 5, Scalar(0), 2, 8, 0);
+								circle(temp, Point(i, j), 5, Scalar(0), 2, 8, 0);
 							}
 						}
 					}
 					namedWindow("Harris Points", CV_WINDOW_AUTOSIZE);
-					imshow("Harris Points", img);
+					imshow("Harris Points", temp);
 					waitKey(0);
 			}
 			return res;
